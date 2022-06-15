@@ -1,8 +1,10 @@
 package order;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
+@JsonPropertyOrder({"productId","asin","title","price","brand"})
 public class OrderLine {
     String productID;
     String asin;
@@ -17,4 +19,6 @@ public class OrderLine {
         this.price = price;
         this.brand = brand;
     }
+
+    public OrderLine() {}
 }

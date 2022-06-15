@@ -11,14 +11,16 @@ import com.google.cloud.bigtable.data.v2.models.Query;
 import com.google.cloud.bigtable.data.v2.models.Row;
 import com.google.cloud.bigtable.data.v2.models.RowCell;
 import com.google.cloud.bigtable.data.v2.models.RowMutation;
-import filereader.CsvReader;
+import filereader.CsvFileReader;
+import filereader.XmlFileReader;
+import order.Invoice;
 import person.Person;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomerDataLoader {
+public class DataLoader {
 
     private static final String COLUMN_FAMILY = "Person";
     private static final String COLUMN_QUALIFIER_ID = "id";
@@ -36,37 +38,32 @@ public class CustomerDataLoader {
     private final BigtableTableAdminClient adminClient;
     private static final String projectId = "projetbddm1";
     private static final String instanceId = "projetbddm";
-    private CsvReader csvReader;
+    private CsvFileReader csvReader;
+    private XmlFileReader xmlReader;
     private ArrayList<Person> persons;
+    private ArrayList<Invoice> invoices;
 
-    public CustomerDataLoader(String projectId, String instanceId, String tableId) throws IOException {
+    public DataLoader(String projectId, String instanceId, String tableId) throws IOException {
         this.tableId = tableId;
-        this.csvReader = new CsvReader();
+        this.csvReader = new CsvFileReader();
+        this.xmlReader = new XmlFileReader();
         this.persons = csvReader.getPersonsDataListFromCsvFile();
+        this.invoices = xmlReader.getInvoicesFromXml();
 
-
-        // [START bigtable_hw_connect]
-        // Creates the settings to configure a bigtable data client.
+        // Init BigTable settings
         BigtableDataSettings settings =
                 BigtableDataSettings.newBuilder().setProjectId(projectId).setInstanceId(instanceId).build();
-
-        // Creates a bigtable data client.
         dataClient = BigtableDataClient.create(settings);
-
-        // Creates the settings to configure a bigtable table admin client.
         BigtableTableAdminSettings adminSettings =
                 BigtableTableAdminSettings.newBuilder()
                         .setProjectId(projectId)
                         .setInstanceId(instanceId)
                         .build();
-
-        // Creates a bigtable table admin client.
         adminClient = BigtableTableAdminClient.create(adminSettings);
-        // [END bigtable_hw_connect]
     }
 
     public static void main(String[] args) throws Exception {
-        CustomerDataLoader loader = new CustomerDataLoader(projectId, instanceId, "customer");
+        DataLoader loader = new DataLoader(projectId, instanceId, "customer");
         loader.run();
     }
 

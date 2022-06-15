@@ -1,11 +1,13 @@
 package person;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import java.util.ArrayList;
 
 @Data
+@JsonPropertyOrder({"id","firstName","lastName","gender","birthday","creationDate","locationIP","browserUsed","place"})
 public class Person {
-
     private String id;
     private String firstName;
     private String lastName;
@@ -15,7 +17,9 @@ public class Person {
     private String locationIP;
     private String browserUsed;
     private String place;
+    @JsonIgnore
     private ArrayList<Person> knownPersons;
+    @JsonIgnore
     private ArrayList<String> interestTags;
 
     public Person(String id, String firstName, String lastName, String gender, String birthday, String creationDate,
@@ -32,6 +36,8 @@ public class Person {
         this.knownPersons = new ArrayList<>();
         this.interestTags = new ArrayList<>();
     }
+
+    public Person(){}
 
     public void addKnownPerson(Person person) {
         this.knownPersons.add(person);
