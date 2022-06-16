@@ -1,6 +1,5 @@
 package product;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
@@ -11,7 +10,6 @@ public class Product {
     String title;
     String price;
     String imgUrl;
-    @JsonIgnore
     String brand;
 
     public Product(String asin, String title, String price, String imgUrl) {

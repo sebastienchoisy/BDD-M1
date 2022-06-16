@@ -5,9 +5,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import feedback.FeedBack;
 import person.Person;
+import socialNetwork.*;
 import product.BrandByProduct;
 import product.Product;
-import socialNetwork.TagsByPerson;
+import vendor.Vendor;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -20,12 +21,12 @@ public class CsvFileReader {
 
     public static void main(String[] args) throws IOException {
         CsvFileReader reader = new CsvFileReader();
-        reader.getPersonsDataListFromCsvFile();
+        System.out.println(reader.getVendorsFromCsvFile());
     }
 
     // On récupère les clients du fichier CSV et on retourne une liste d'objets Person
     public ArrayList<Person> getPersonsDataListFromCsvFile() throws IOException {
-        ArrayList<Person> persons = new ArrayList<>();
+        ArrayList<Person> persons;
         CsvSchema schema = csvMapper.schemaFor(Person.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
         this.file = new File("././data/Customer/person_0_0.csv");
         MappingIterator<Person> it = csvMapper
@@ -33,13 +34,6 @@ public class CsvFileReader {
                 .with(schema)
                 .readValues(this.file);
         persons = (ArrayList<Person>) it.readAll();
-        persons.forEach(person -> {
-            try {
-                person.setInterestTags(this.getTagsByPersonFromCsvFile().get(person.getId()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
         return persons;
     }
 
@@ -85,28 +79,77 @@ public class CsvFileReader {
         return (ArrayList<BrandByProduct>) it.readAll();
     }
 
-    public HashMap<String,ArrayList<String>> getTagsByPersonFromCsvFile() throws IOException {
-        HashMap<String,ArrayList<String>> tagsByPersonMap = new HashMap<>();
+    public ArrayList<TagsByPerson> getTagsByPersonFromCsvFile() throws IOException {
         CsvSchema schema = csvMapper.schemaFor(TagsByPerson.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
         this.file = new File("././data/SocialNetwork/person_hasInterest_tag_0_0.csv");
         MappingIterator<TagsByPerson> it = csvMapper
                 .readerFor(TagsByPerson.class)
                 .with(schema)
                 .readValues(this.file);
-        ArrayList<TagsByPerson> list = (ArrayList<TagsByPerson>) it.readAll();
-        list.forEach(tagByPerson -> {
-            String personId = tagByPerson.getPersonId();
-            String tagId = tagByPerson.getTagId();
-            if(tagsByPersonMap.containsKey(personId)){
-                tagsByPersonMap.get(personId).add(tagId);
-            } else {
-                ArrayList<String> tagList = new ArrayList<>();
-                tagList.add(tagId);
-                tagsByPersonMap.put(personId, tagList);
-            }
-        });
-        return tagsByPersonMap;
+        return (ArrayList<TagsByPerson>) it.readAll();
     }
 
+    //TODO FIX PROP INVERSE
+    public ArrayList<PersonLink> getLinkByPersonFromCsvFile() throws IOException {
+        CsvSchema schema = csvMapper.schemaFor(PersonLink.class).withoutHeader().withColumnSeparator(COLUMN_SEPARATOR);
+        this.file = new File("././data/SocialNetwork/person_knows_person_0_0.csv");
+        MappingIterator<PersonLink> it = csvMapper
+                .readerFor(PersonLink.class)
+                .with(schema)
+                .readValues(this.file);
+        ArrayList<PersonLink> list = (ArrayList<PersonLink>) it.readAll();
+        // On supprime le première élèment avec les headers (compliqué à traiter avec des headers nommés identiquement)
+        list.remove(0);
+        return list;
+    }
 
+    public ArrayList<Post> getPostsFromCsvFile() throws IOException {
+        CsvSchema schema = csvMapper.schemaFor(Post.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
+        this.file = new File("././data/SocialNetwork/post_0_0.csv");
+        MappingIterator<Post> it = csvMapper
+                .readerFor(Post.class)
+                .with(schema)
+                .readValues(this.file);
+        ArrayList<Post> list =  (ArrayList<Post>) it.readAll();
+        ArrayList<AuthorByPost> authorByPost = this.getAuthorByPost();
+        HashMap<String,String> hashMap = new HashMap<>();
+        authorByPost.forEach(obj -> {
+            hashMap.put(obj.getPostId(), obj.getPersonId());
+        });
+        list.forEach(post -> {
+            post.setAuthorId(hashMap.get(post.getId()));
+        });
+        return list;
+    }
+
+    public ArrayList<AuthorByPost> getAuthorByPost() throws IOException {
+        CsvSchema schema = csvMapper.schemaFor(AuthorByPost.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
+        this.file = new File("././data/SocialNetwork/post_hasCreator_person_0_0.csv");
+        MappingIterator<AuthorByPost> it = csvMapper
+                .readerFor(AuthorByPost.class)
+                .with(schema)
+                .readValues(this.file);
+        ArrayList<AuthorByPost> list = (ArrayList<AuthorByPost>) it.readAll();
+        return list;
+    }
+
+    public ArrayList<TagsByPost> getTagsByPostFromCsvFile() throws IOException {
+        CsvSchema schema = csvMapper.schemaFor(TagsByPost.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
+        this.file = new File("././data/SocialNetwork/post_hasTag_tag_0_0.csv");
+        MappingIterator<TagsByPost> it = csvMapper
+                .readerFor(TagsByPost.class)
+                .with(schema)
+                .readValues(this.file);
+        return (ArrayList<TagsByPost>) it.readAll();
+    }
+
+    public ArrayList<Vendor> getVendorsFromCsvFile() throws IOException {
+        CsvSchema schema = csvMapper.schemaFor(Vendor.class).withHeader().withColumnSeparator(',');
+        this.file = new File("././data/Vendor/Vendor.csv");
+        MappingIterator<Vendor> it = csvMapper
+                .readerFor(Vendor.class)
+                .with(schema)
+                .readValues(this.file);
+        return (ArrayList<Vendor>) it.readAll();
+    }
 }
