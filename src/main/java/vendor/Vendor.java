@@ -7,9 +7,9 @@ import lombok.Data;
 public class Vendor {
     @JsonProperty("Vendor")
     String vendor;
-    @JsonProperty("country")
+    @JsonProperty("Country")
     String country;
-    @JsonProperty("industry")
+    @JsonProperty("Industry")
     String industry;
 
     public Vendor() {}

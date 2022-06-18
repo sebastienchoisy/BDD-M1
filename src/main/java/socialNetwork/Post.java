@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
-@JsonPropertyOrder({"id","imageFile","creationDate","locationIP","browserUsed", "language","content","length"})
+@JsonPropertyOrder(value={"id","imageFile","creationDate","locationIP","browserUsed", "language","content","length"})
 public class Post {
     String id;
     String imageFile;

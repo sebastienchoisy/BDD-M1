@@ -1,15 +1,13 @@
 package socialNetwork;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
+@JsonPropertyOrder(value={"personId","friendId","creationDate"})
 public class PersonLink {
-    @JsonProperty("Person.id")
     String personId;
-    @JsonProperty("friendId")
     String friendId;
-    @JsonProperty("creationDate")
     String creationDate;
 
     PersonLink() {}

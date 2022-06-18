@@ -16,12 +16,11 @@ import java.util.HashMap;
 
 public class CsvFileReader {
     private File file;
-    private final CsvMapper csvMapper = new CsvMapper();
+    private final CsvMapper csvMapper;
     private final char COLUMN_SEPARATOR = '|';
 
-    public static void main(String[] args) throws IOException {
-        CsvFileReader reader = new CsvFileReader();
-        System.out.println(reader.getVendorsFromCsvFile());
+    public CsvFileReader() {
+        this.csvMapper = new CsvMapper();
     }
 
     // On récupère les clients du fichier CSV et on retourne une liste d'objets Person
@@ -39,7 +38,7 @@ public class CsvFileReader {
 
     // On récupère les feedbacks du fichier CSV et on retourne une liste d'object Feedback
     public ArrayList<FeedBack> getFeedBacksDataListFromCsvFile() throws IOException {
-        CsvSchema schema = csvMapper.schemaFor(FeedBack.class).withHeader().withColumnSeparator(COLUMN_SEPARATOR);
+        CsvSchema schema = csvMapper.schemaFor(FeedBack.class).withoutHeader().withColumnSeparator(COLUMN_SEPARATOR).withEscapeChar('\\');
         this.file = new File("././data/Feedback/Feedback.csv");
         MappingIterator<FeedBack> it = csvMapper
                 .readerFor(FeedBack.class)
@@ -58,13 +57,9 @@ public class CsvFileReader {
                 .with(schema)
                 .readValues(this.file);
         ArrayList<BrandByProduct> brands = this.getBrandByProductFromCsvFile();
-        brands.forEach(brandByProduct -> {
-            productMap.put(brandByProduct.getProductId(),brandByProduct.getBrandName());
-        });
+        brands.forEach(brandByProduct -> productMap.put(brandByProduct.getProductId(),brandByProduct.getBrandName()));
         ArrayList<Product> products = (ArrayList<Product>) it.readAll();
-        products.forEach(product -> {
-            product.setBrand(productMap.get(product.getAsin()));
-        });
+        products.forEach(product -> product.setBrand(productMap.get(product.getAsin())));
         return products;
     }
 
@@ -89,7 +84,6 @@ public class CsvFileReader {
         return (ArrayList<TagsByPerson>) it.readAll();
     }
 
-    //TODO FIX PROP INVERSE
     public ArrayList<PersonLink> getLinkByPersonFromCsvFile() throws IOException {
         CsvSchema schema = csvMapper.schemaFor(PersonLink.class).withoutHeader().withColumnSeparator(COLUMN_SEPARATOR);
         this.file = new File("././data/SocialNetwork/person_knows_person_0_0.csv");
@@ -113,12 +107,8 @@ public class CsvFileReader {
         ArrayList<Post> list =  (ArrayList<Post>) it.readAll();
         ArrayList<AuthorByPost> authorByPost = this.getAuthorByPost();
         HashMap<String,String> hashMap = new HashMap<>();
-        authorByPost.forEach(obj -> {
-            hashMap.put(obj.getPostId(), obj.getPersonId());
-        });
-        list.forEach(post -> {
-            post.setAuthorId(hashMap.get(post.getId()));
-        });
+        authorByPost.forEach(obj -> hashMap.put(obj.getPostId(), obj.getPersonId()));
+        list.forEach(post -> post.setAuthorId(hashMap.get(post.getId())));
         return list;
     }
 
@@ -129,8 +119,7 @@ public class CsvFileReader {
                 .readerFor(AuthorByPost.class)
                 .with(schema)
                 .readValues(this.file);
-        ArrayList<AuthorByPost> list = (ArrayList<AuthorByPost>) it.readAll();
-        return list;
+        return (ArrayList<AuthorByPost>) it.readAll();
     }
 
     public ArrayList<TagsByPost> getTagsByPostFromCsvFile() throws IOException {
@@ -144,7 +133,7 @@ public class CsvFileReader {
     }
 
     public ArrayList<Vendor> getVendorsFromCsvFile() throws IOException {
-        CsvSchema schema = csvMapper.schemaFor(Vendor.class).withHeader().withColumnSeparator(',');
+        CsvSchema schema = csvMapper.schemaFor(Vendor.class).withHeader().withColumnReordering(true).withColumnSeparator(',');
         this.file = new File("././data/Vendor/Vendor.csv");
         MappingIterator<Vendor> it = csvMapper
                 .readerFor(Vendor.class)

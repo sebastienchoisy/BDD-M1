@@ -3,8 +3,10 @@ package order;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
+import java.util.ArrayList;
+
 @Data
-@JsonPropertyOrder({"productId","asin","title","price","brand"})
+@JsonPropertyOrder(value={"productId","asin","title","price","brand"})
 public class OrderLine {
     String productID;
     String asin;
