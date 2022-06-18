@@ -4,17 +4,19 @@ import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.ServerStream;
 import com.google.cloud.bigtable.admin.v2.BigtableTableAdminClient;
 import com.google.cloud.bigtable.admin.v2.BigtableTableAdminSettings;
+import com.google.cloud.bigtable.admin.v2.models.ColumnFamily;
 import com.google.cloud.bigtable.admin.v2.models.CreateTableRequest;
 import com.google.cloud.bigtable.admin.v2.models.ModifyColumnFamiliesRequest;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
-import com.google.cloud.bigtable.data.v2.models.Filters;
-import com.google.cloud.bigtable.data.v2.models.Query;
-import com.google.cloud.bigtable.data.v2.models.Row;
-import com.google.cloud.bigtable.data.v2.models.RowCell;
+import com.google.cloud.bigtable.data.v2.models.*;
 import lombok.Data;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Data
 public class BigTableClient {
@@ -50,7 +52,15 @@ public class BigTableClient {
     }
 
     public boolean isColumnFamilyExisting(String columnFamilyName) {
-        return this.adminClient.getTable(this.tableId).getColumnFamilies().contains(columnFamilyName);
+        boolean doesExist = false;
+        List<ColumnFamily> columnFamilies = this.adminClient.getTable(this.tableId).getColumnFamilies();
+        columnFamilies.forEach(columnFamily -> System.out.println(columnFamily.getId()));
+        for(int i = 0; i < columnFamilies.size(); i++) {
+            if(Objects.equals(columnFamilies.get(i).getId(), columnFamilyName)) {
+                doesExist = true;
+            }
+        }
+        return doesExist;
     }
 
     public void addColumnFamily(String columnFamilyName) {
@@ -69,13 +79,13 @@ public class BigTableClient {
         }
     }
 
-    public ServerStream getRowWithFilter(Filters.Filter filter) {
-            Query query = Query.create(tableId);
+    public ServerStream getRowsWithFilter(Filters.Filter filter) {
+            Query query = Query.create(tableId).filter(filter);
             ServerStream<Row> rows = this.dataClient.readRows(query);
             return rows;
     }
 
-    private static void printRow(Row row) {
+    public void printRow(Row row) {
         System.out.printf("Reading data for %s%n", row.getKey().toStringUtf8());
         String colFamily = "";
         for (RowCell cell : row.getCells()) {
@@ -93,5 +103,25 @@ public class BigTableClient {
                     labels);
         }
         System.out.println();
+    }
+
+    public void updateDataRow(String columnFamilyName, String rowkey, String qualifier, String value) {
+        try {
+            RowMutation rowMutation =
+                    RowMutation.create(this.tableId, rowkey).setCell(columnFamilyName, qualifier, value);
+            this.dataClient.mutateRow(rowMutation);
+        } catch (NotFoundException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void deleteSpecificCell(String rowkey, String ColumnFamilyName, String qualifier) {
+        try {
+            RowMutation rowMutation =
+                    RowMutation.create(this.tableId, rowkey).deleteCells(ColumnFamilyName,qualifier);
+            this.dataClient.mutateRow(rowMutation);
+        } catch (NotFoundException e) {
+            System.err.println(e.getMessage());
+        }
     }
 }

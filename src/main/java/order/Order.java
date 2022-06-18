@@ -12,9 +12,9 @@ import java.util.ArrayList;
 @Data
 public class Order {
     @JsonProperty("OrderId")
-    String orderID;
+    String orderId;
     @JsonProperty("PersonId")
-    String personID;
+    String personId;
     @JsonProperty("OrderDate")
     String orderDate;
     @JsonProperty("TotalPrice")
@@ -22,12 +22,21 @@ public class Order {
     @JsonProperty("Orderline")
     ArrayList<Product> orderline;
 
-    public Order(String orderID, String personID, String orderDate, String totalPrice, ArrayList<Product> orderLine) {
-        this.orderID = orderID;
-        this.personID = personID;
+    public Order(String orderId, String personId, String orderDate, String totalPrice, ArrayList<Product> orderLine) {
+        this.orderId = orderId;
+        this.personId = personId;
         this.orderDate = orderDate;
         this.totalPrice = totalPrice;
         this.orderline = orderLine;
+    }
+
+    public void setOrderIdForOrderLine() {
+        this.orderline.forEach(product -> {
+            product.setOrderId(this.orderId);
+            if(product.getImgUrl() == null) {
+                product.setImgUrl("");
+            }
+        });
     }
 
     public Order() {

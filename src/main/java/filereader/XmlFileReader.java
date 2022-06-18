@@ -1,5 +1,6 @@
 package filereader;
 
+import lombok.Getter;
 import order.Invoice;
 import order.OrderLine;
 import org.w3c.dom.Document;
@@ -12,6 +13,12 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class XmlFileReader {
+    @Getter
+    private ArrayList<OrderLine> orderLines;
+
+    public XmlFileReader() {
+        this.orderLines = new ArrayList<>();
+    }
 
     public ArrayList<Invoice> getInvoicesFromXml() {
         ArrayList<Invoice> Invoices = new ArrayList<>();
@@ -22,7 +29,7 @@ public class XmlFileReader {
             Document doc = dBuilder.parse(XmlFile);
             doc.getDocumentElement().normalize();
 
-            NodeList nList = doc.getElementsByTagName("Invoice");
+            NodeList nList = doc.getElementsByTagName("Invoice.xml");
             for(int i = 0; i < nList.getLength(); i++) {
                 Invoices.add(this.getInvoiceFromXml(nList.item(i)));
             }
@@ -32,26 +39,26 @@ public class XmlFileReader {
         return Invoices;
     }
 
-    private OrderLine getOrderlineFromXml(Node orderLine) {
+    private OrderLine getOrderlineFromXml(Node orderLine, String orderId) {
         Element elt = (Element) orderLine;
         return new OrderLine(elt.getElementsByTagName("productId").item(0).getTextContent(),
                 elt.getElementsByTagName("asin").item(0).getTextContent(),
                 elt.getElementsByTagName("title").item(0).getTextContent(),
                 elt.getElementsByTagName("price").item(0).getTextContent(),
-                elt.getElementsByTagName("brand").item(0).getTextContent());
+                elt.getElementsByTagName("brand").item(0).getTextContent(),
+                orderId);
     }
 
     private Invoice getInvoiceFromXml(Node invoice) {
         Element elt = (Element) invoice;
-        ArrayList<OrderLine> orderLineList = new ArrayList<>();
+        String orderId = elt.getElementsByTagName("OrderId").item(0).getTextContent();
         NodeList nList = elt.getElementsByTagName("Orderline");
         for(int i = 0; i < nList.getLength(); i++){
-            orderLineList.add(this.getOrderlineFromXml(nList.item(i)));
+            this.orderLines.add(this.getOrderlineFromXml(nList.item(i),orderId));
         }
-        return new Invoice(elt.getElementsByTagName("OrderId").item(0).getTextContent(),
+        return new Invoice(orderId,
                 elt.getElementsByTagName("PersonId").item(0).getTextContent(),
                 elt.getElementsByTagName("OrderDate").item(0).getTextContent(),
-                elt.getElementsByTagName("TotalPrice").item(0).getTextContent(),
-                orderLineList);
+                elt.getElementsByTagName("TotalPrice").item(0).getTextContent());
     }
 }

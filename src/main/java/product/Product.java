@@ -14,6 +14,7 @@ public class Product {
     String price;
     String imgUrl;
     String brand;
+    String orderId;
 
     public Product(String asin, String title, String price, String imgUrl) {
         this.asin = asin;

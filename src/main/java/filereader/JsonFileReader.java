@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import order.Order;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class JsonFileReader {
@@ -21,10 +19,12 @@ public class JsonFileReader {
         reader.getOrdersFromJson();
     }
 
-    public void getOrdersFromJson() throws IOException {
+    public ArrayList<Order> getOrdersFromJson() throws IOException {
         this.fixOrdersJson();
         this.file = new File("././data/Order/OrderFixed.json");
-        ArrayList<Order> OrdersList = this.mapper.readValue(this.file, new TypeReference<>() {});
+        ArrayList<Order> ordersList = this.mapper.readValue(this.file, new TypeReference<>() {});
+        ordersList.forEach(order -> order.setOrderIdForOrderLine());
+        return ordersList;
     }
 
     private void fixOrdersJson() throws IOException {

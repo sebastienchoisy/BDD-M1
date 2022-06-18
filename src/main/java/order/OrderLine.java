@@ -3,23 +3,24 @@ package order;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
-import java.util.ArrayList;
 
 @Data
 @JsonPropertyOrder(value={"productId","asin","title","price","brand"})
 public class OrderLine {
-    String productID;
+    String productId;
     String asin;
     String title;
     String price;
     String brand;
+    String orderId;
 
-    public OrderLine(String productID, String asin, String title, String price, String brand) {
-        this.productID = productID;
+    public OrderLine(String productId, String asin, String title, String price, String brand, String orderId) {
+        this.productId = productId;
         this.asin = asin;
         this.title = title;
         this.price = price;
         this.brand = brand;
+        this.orderId = orderId;
     }
 
     public OrderLine() {}
