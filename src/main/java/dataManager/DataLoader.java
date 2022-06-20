@@ -53,9 +53,11 @@ public class DataLoader {
 
     public static void main(String[] args) throws IOException {
         DataLoader loader = new DataLoader();
-//        loader.writePersonsToTable();
-//        loader.writeFeedBacksToTable();
-//        loader.writeInvoicesToTable();
+        loader.getBigTableClient().deleteTable();
+        loader.getBigTableClient().createTableIfDoesntExist();
+        loader.writePersonsToTable();
+        loader.writeFeedBacksToTable();
+        loader.writeInvoicesToTable();
         loader.writeOrdersToTable();
         loader.writePostsToTable();
         loader.writeKnownPersonToTable();
@@ -233,15 +235,15 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "id", person.getId())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "firstName", person.getFirstName())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "lastName", person.getLastName())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "gender", person.getGender())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "birthday", person.getBirthday())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "creationDate", person.getCreationDate())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "locationIP", person.getLocationIP())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "browserUsed", person.getBrowserUsed())
-                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "place", person.getPlace());
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "id", FormatNullString(person.getId()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "firstName", FormatNullString(person.getFirstName()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "lastName", FormatNullString(person.getLastName()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "gender", FormatNullString(person.getGender()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "birthday", FormatNullString(person.getBirthday()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "creationDate", FormatNullString(person.getCreationDate()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "locationIP", FormatNullString(person.getLocationIP()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "browserUsed", FormatNullString(person.getBrowserUsed()))
+                            .setCell(this.CUSTOMER_COLUMN_FAMILY, "place", FormatNullString(person.getPlace()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -252,9 +254,9 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "asin", feedback.getAsin())
-                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "personID", feedback.getPersonId())
-                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "comment", feedback.getComment());
+                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "asin", FormatNullString(feedback.getAsin()))
+                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "personId", FormatNullString(feedback.getPersonId()))
+                            .setCell(this.FEEDBACK_COLUMN_FAMILY, "comment", FormatNullString(feedback.getComment()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -265,10 +267,10 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.INVOICE_COLUMN_FAMILY, "orderID", invoice.getOrderId())
-                            .setCell(this.INVOICE_COLUMN_FAMILY, "personID", invoice.getPersonId())
-                            .setCell(this.INVOICE_COLUMN_FAMILY, "orderDate", invoice.getOrderDate())
-                            .setCell(this.INVOICE_COLUMN_FAMILY, "totalPrice", invoice.getTotalPrice());
+                            .setCell(this.INVOICE_COLUMN_FAMILY, "orderID", FormatNullString(invoice.getOrderId()))
+                            .setCell(this.INVOICE_COLUMN_FAMILY, "personId", FormatNullString(invoice.getPersonId()))
+                            .setCell(this.INVOICE_COLUMN_FAMILY, "orderDate", FormatNullString(invoice.getOrderDate()))
+                            .setCell(this.INVOICE_COLUMN_FAMILY, "totalPrice", FormatNullString(invoice.getTotalPrice()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -279,12 +281,12 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "productId", orderLine.getOrderId())
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "asin", orderLine.getAsin())
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "title", orderLine.getTitle())
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "price", orderLine.getPrice())
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "brand", orderLine.getBrand())
-                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "orderId", orderLine.getOrderId());
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "productId", FormatNullString(orderLine.getOrderId()))
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "asin", FormatNullString(orderLine.getAsin()))
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "title", FormatNullString(orderLine.getTitle()))
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "price",FormatNullString(orderLine.getPrice()))
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "brand", FormatNullString(orderLine.getBrand()))
+                            .setCell(this.INVOICE_ORDERLINE_COLUMN_FAMILY, "orderId", FormatNullString(orderLine.getOrderId()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -295,10 +297,10 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.ORDER_COLUMN_FAMILY, "orderId", order.getOrderId())
-                            .setCell(this.ORDER_COLUMN_FAMILY, "personId", order.getPersonId())
-                            .setCell(this.ORDER_COLUMN_FAMILY, "orderDate", order.getOrderDate())
-                            .setCell(this.ORDER_COLUMN_FAMILY, "totalPrice", order.getTotalPrice());
+                            .setCell(this.ORDER_COLUMN_FAMILY, "orderId", FormatNullString(order.getOrderId()))
+                            .setCell(this.ORDER_COLUMN_FAMILY, "personId", FormatNullString(order.getPersonId()))
+                            .setCell(this.ORDER_COLUMN_FAMILY, "orderDate", FormatNullString(order.getOrderDate()))
+                            .setCell(this.ORDER_COLUMN_FAMILY, "totalPrice", FormatNullString(order.getTotalPrice()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -309,13 +311,13 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "productId", product.getProductId())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "asin", product.getAsin())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "title", product.getTitle())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "price", product.getPrice())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "imgUrl", product.getImgUrl())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "brand", product.getBrand())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "orderId", product.getOrderId());
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "productId", FormatNullString(product.getProductId()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "asin", FormatNullString(product.getAsin()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "title", FormatNullString(product.getTitle()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "price", FormatNullString(product.getPrice()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "imgUrl", FormatNullString(product.getImgUrl()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "brand", FormatNullString(product.getBrand()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "orderId", FormatNullString(product.getOrderId()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -326,12 +328,12 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "productId", product.getProductId())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "asin", product.getAsin())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "title", product.getTitle())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "price", product.getPrice())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "imgUrl", product.getImgUrl())
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "brand", product.getBrand());
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "productId", FormatNullString(product.getProductId()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "asin", FormatNullString(product.getAsin()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "title", FormatNullString(product.getTitle()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "price", FormatNullString(product.getPrice()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "imgUrl", FormatNullString(product.getImgUrl()))
+                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "brand", FormatNullString(product.getBrand()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -342,15 +344,15 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.POST_COLUMN_FAMILY, "id", post.getId())
-                            .setCell(this.POST_COLUMN_FAMILY, "imageFile", post.getImageFile())
-                            .setCell(this.POST_COLUMN_FAMILY, "creationDate", post.getCreationDate())
-                            .setCell(this.POST_COLUMN_FAMILY, "locationIP", post.getLocationIP())
-                            .setCell(this.POST_COLUMN_FAMILY, "browserUsed", post.getBrowserUsed())
-                            .setCell(this.POST_COLUMN_FAMILY, "language", post.getLanguage())
-                            .setCell(this.POST_COLUMN_FAMILY, "content", post.getContent())
-                            .setCell(this.POST_COLUMN_FAMILY, "length", post.getLength())
-                            .setCell(this.POST_COLUMN_FAMILY, "authorId", post.getAuthorId());
+                            .setCell(this.POST_COLUMN_FAMILY, "id", FormatNullString(post.getId()))
+                            .setCell(this.POST_COLUMN_FAMILY, "imageFile", FormatNullString(post.getImageFile()))
+                            .setCell(this.POST_COLUMN_FAMILY, "creationDate", FormatNullString(post.getCreationDate()))
+                            .setCell(this.POST_COLUMN_FAMILY, "locationIP", FormatNullString(post.getLocationIP()))
+                            .setCell(this.POST_COLUMN_FAMILY, "browserUsed", FormatNullString(post.getBrowserUsed()))
+                            .setCell(this.POST_COLUMN_FAMILY, "language", FormatNullString(post.getLanguage()))
+                            .setCell(this.POST_COLUMN_FAMILY, "content", FormatNullString(post.getContent()))
+                            .setCell(this.POST_COLUMN_FAMILY, "length", FormatNullString(post.getLength()))
+                            .setCell(this.POST_COLUMN_FAMILY, "authorId", FormatNullString(post.getAuthorId()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -361,9 +363,9 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "personId",knowPerson.getPersonId())
-                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "friendId", knowPerson.getFriendId())
-                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "creationDate", knowPerson.getCreationDate());
+                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "personId",FormatNullString(knowPerson.getPersonId()))
+                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "friendId", FormatNullString(knowPerson.getFriendId()))
+                            .setCell(this.KNOWN_PERSON_COLUMN_FAMILY, "creationDate", FormatNullString(knowPerson.getCreationDate()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -374,8 +376,8 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.PERSON_TAGS_COLUMN_FAMILY, "personId", personTags.getPersonId())
-                            .setCell(this.PERSON_TAGS_COLUMN_FAMILY, "tagId", personTags.getTagId());
+                            .setCell(this.PERSON_TAGS_COLUMN_FAMILY, "personId", FormatNullString(personTags.getPersonId()))
+                            .setCell(this.PERSON_TAGS_COLUMN_FAMILY, "tagId", FormatNullString(personTags.getTagId()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
@@ -386,11 +388,18 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.POST_TAGS_COLUMN_FAMILY, "postId", postTags.getPostId())
-                            .setCell(this.POST_TAGS_COLUMN_FAMILY, "tagId", postTags.getTagId());
+                            .setCell(this.POST_TAGS_COLUMN_FAMILY, "postId", FormatNullString(postTags.getPostId()))
+                            .setCell(this.POST_TAGS_COLUMN_FAMILY, "tagId", FormatNullString(postTags.getTagId()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
         }
+    }
+
+    public String FormatNullString(String string) {
+        if(string == null){
+            return "";
+        }
+        return string;
     }
 }

@@ -13,10 +13,9 @@ import com.google.cloud.bigtable.data.v2.models.*;
 import lombok.Data;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
 
 @Data
 public class BigTableClient {
@@ -36,10 +35,9 @@ public class BigTableClient {
                         .setInstanceId(this.instanceId)
                         .build();
         this.adminClient = BigtableTableAdminClient.create(adminSettings);
-        this.createTableIfDoesntExist();
     }
 
-    private void createTableIfDoesntExist() {
+    public void createTableIfDoesntExist() {
         if(!this.adminClient.exists(this.tableId)) {
             System.out.println("La table "+ this.tableId + " n'existe pas ! -> Création de la table");
             CreateTableRequest createTableRequest =
@@ -54,7 +52,6 @@ public class BigTableClient {
     public boolean isColumnFamilyExisting(String columnFamilyName) {
         boolean doesExist = false;
         List<ColumnFamily> columnFamilies = this.adminClient.getTable(this.tableId).getColumnFamilies();
-        columnFamilies.forEach(columnFamily -> System.out.println(columnFamily.getId()));
         for(int i = 0; i < columnFamilies.size(); i++) {
             if(Objects.equals(columnFamilies.get(i).getId(), columnFamilyName)) {
                 doesExist = true;
@@ -80,7 +77,7 @@ public class BigTableClient {
     }
 
     public ServerStream getRowsWithFilter(Filters.Filter filter) {
-            Query query = Query.create(tableId).filter(filter);
+            Query query = Query.create(this.tableId).filter(filter);
             ServerStream<Row> rows = this.dataClient.readRows(query);
             return rows;
     }
@@ -93,14 +90,10 @@ public class BigTableClient {
                 colFamily = cell.getFamily();
                 System.out.printf("Column Family %s%n", colFamily);
             }
-            String labels =
-                    cell.getLabels().size() == 0 ? "" : " [" + String.join(",", cell.getLabels()) + "]";
             System.out.printf(
-                    "\t%s: %s @%s%s%n",
+                    "\t%s: %s %n",
                     cell.getQualifier().toStringUtf8(),
-                    cell.getValue().toStringUtf8(),
-                    cell.getTimestamp(),
-                    labels);
+                    cell.getValue().toStringUtf8());
         }
         System.out.println();
     }
