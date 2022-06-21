@@ -23,7 +23,8 @@ public class DataRequests {
 
     public static void main(String[] args) throws Exception {
         DataRequests requests = new DataRequests();
-        requests.query1("Bill","Brown");
+//        requests.query1("Bill","Brown");
+        requests.query2("Armasight Spark CORE Multi-Purpose Night Vision Monocular");
     }
 
     public void query1(String customerFirstName, String customerLastName) {
@@ -44,7 +45,7 @@ public class DataRequests {
         if(dataRows.size() > 0) {
             dataRows.forEach(rowOrder -> {
                 this.bigTableClient.printRow(rowOrder);
-                boughtBrandsOccurence.addAll(this.getProductsBoughtByOrder(getValueForQualifier(rowOrder,"Order","orderId")));
+                boughtBrandsOccurence.addAll(this.getProductsBrandBoughtByOrder(getValueForQualifier(rowOrder,"Order","orderId")));
             });
         } else {
             System.out.println("No order registered for this customer");
@@ -83,6 +84,51 @@ public class DataRequests {
         System.out.println("**** "+this.getMostUsedTagForCustomer("4145")+" ****");
     }
 
+    public void query2(String productName) {
+        ArrayList<Row> peopleWhoBoughtIt = new ArrayList<>();
+        String customerId;
+        ArrayList<Row> peopleWhoPosted = this.getPeopleWhoPostedOnProduct(productName, "2022-06-05","2022-06-25");
+        if(peopleWhoPosted.size() > 0) {
+            for(Row row : peopleWhoPosted){
+                customerId = getValueForQualifier(row,"Customer","id");
+                ArrayList<Row> dataRows = getFamilyRowsForSpecificCustomer("Order",customerId,"personId");
+                for(Row dataRow : dataRows) {
+                    ArrayList<String> productNames = getProductsNameByOrder(getValueForQualifier(dataRow,"Order","orderId"));
+                    if(productNames.contains(productName)) {
+                        peopleWhoBoughtIt.add(row);
+                    }
+                }
+            }
+        }
+        if(peopleWhoBoughtIt.size() > 0 ) {
+            System.out.println("\nPeople who talked about our product and bought it: " + productName.toUpperCase());
+            for(Row row : peopleWhoBoughtIt) {
+                this.bigTableClient.printRow(row);
+            }
+        }
+    }
+
+    public ArrayList<Row> getPeopleWhoPostedOnProduct(String name, String fromDate, String toDate) {
+        Filters.Filter filter = FILTERS.family().exactMatch("Post");
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        ArrayList<String> authorsId = new ArrayList<>();
+        ArrayList<Row> people = new ArrayList<>();
+        rows.forEach(row -> {
+            if(getValueForQualifier(row,"Post","content").contains(name) && checkIfDateInRange(
+                    getValueForQualifier(row,"Post","creationDate"),fromDate,toDate)
+            ) {
+                authorsId.add(getValueForQualifier(row,"Post","authorId"));
+            }
+        });
+        filter = FILTERS.family().exactMatch("Customer");
+        rows = this.bigTableClient.getRowsWithFilter(filter);
+        rows.forEach(row -> {
+            if(authorsId.contains(getValueForQualifier(row,"Customer","id"))) {
+                people.add(row);
+            }
+        });
+        return people;
+    }
 
     public String getMostOccurencesInList(ArrayList<String> list) {
         HashMap<String,Integer> occurences = new HashMap<>();
@@ -120,13 +166,25 @@ public class DataRequests {
         return Date.from(LocalDate.parse(date).atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
-    public ArrayList<String> getProductsBoughtByOrder(String id) {
+    public ArrayList<String> getProductsBrandBoughtByOrder(String id) {
         ArrayList<String> productsRow = new ArrayList<>();
         Filters.Filter filter = FILTERS.family().exactMatch("Order_orderlines");
         ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
         rows.forEach(row -> {
             if(getValueForQualifier(row,"Order_orderlines","orderId").equals(id)){
                 productsRow.add(getValueForQualifier(row,"Order_orderlines","brand"));
+            }
+        });
+        return productsRow;
+    }
+
+    public ArrayList<String> getProductsNameByOrder(String id) {
+        ArrayList<String> productsRow = new ArrayList<>();
+        Filters.Filter filter = FILTERS.family().exactMatch("Order_orderlines");
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        rows.forEach(row -> {
+            if(getValueForQualifier(row,"Order_orderlines","orderId").equals(id)){
+                productsRow.add(getValueForQualifier(row,"Order_orderlines","title"));
             }
         });
         return productsRow;
