@@ -328,12 +328,12 @@ public class DataLoader {
         try {
             RowMutation rowMutation =
                     RowMutation.create(this.tableId, this.ROW_KEY_PREFIX + rowkeyIndex)
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "productId", FormatNullString(product.getProductId()))
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "asin", FormatNullString(product.getAsin()))
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "title", FormatNullString(product.getTitle()))
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "price", FormatNullString(product.getPrice()))
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "imgUrl", FormatNullString(product.getImgUrl()))
-                            .setCell(this.ORDER_ORDERLINE_COLUMN_FAMILY, "brand", FormatNullString(product.getBrand()));
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "productId", FormatNullString(product.getProductId()))
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "asin", FormatNullString(product.getAsin()))
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "title", FormatNullString(product.getTitle()))
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "price", FormatNullString(product.getPrice()))
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "imgUrl", FormatNullString(product.getImgUrl()))
+                            .setCell(this.PRODUCT_COLUMN_FAMILY, "brand", FormatNullString(product.getBrand()));
             this.dataClient.mutateRow(rowMutation);
         } catch (NotFoundException e) {
             System.err.println(e.getMessage());
