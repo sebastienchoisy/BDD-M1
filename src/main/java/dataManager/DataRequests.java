@@ -37,7 +37,9 @@ public class DataRequests {
 //        requests.query1("Bill","Brown");
 //        requests.query2("Armasight Spark CORE Multi-Purpose Night Vision Monocular");
 //        requests.query3("B007SYGLZO","2000-06-06","2030-06-25");
-        requests.query4();
+//        requests.query4();
+//        requests.query5("4445","Elfin_Sports_Cars");
+          requests.query7("TRYMAX");
     }
 
     public void query1(String customerFirstName, String customerLastName) {
@@ -156,6 +158,55 @@ public class DataRequests {
         topPeople.forEach(peopleRow -> System.out.println(this.extractCustomerInfoFromRow(peopleRow)));
     }
 
+    public void query5(String customerId, String brandName) {
+        ArrayList<Row> friends = this.getCustomerFriends(customerId,3);
+        ArrayList<Row> friendsWhoBought = new ArrayList<>();
+        ArrayList<Row> productsOrder;
+        ArrayList<Row> orderRows;
+        ArrayList<Row> positiveFeedbacks = new ArrayList<>();
+        for(Row row : friends) {
+            String id = this.getValueForQualifier(row,CUSTOMER_COLUMN_FAMILY,"id");
+            orderRows = this.getFamilyRowsForSpecificCustomer(ORDER_COLUMN_FAMILY, id, "personId");
+
+            for(Row orderRow: orderRows) {
+                productsOrder = this.getProductsBoughtByOrder(this.getValueForQualifier(orderRow,ORDER_COLUMN_FAMILY,"orderId"));
+                productsOrder.forEach(productRow -> {
+                    if(this.isProductFromThisBrand(productRow,brandName)) {
+                        friendsWhoBought.add(row);
+                        positiveFeedbacks.addAll(this.getPositiveFeedbacksForSpecificProduct(this.getValueForQualifier(productRow,PRODUCT_COLUMN_FAMILY,"asin")));
+                    }
+                });
+            }
+            if(positiveFeedbacks.size() > 0) {
+                positiveFeedbacks.forEach(feedback -> System.out.println(this.getValueForQualifier(feedback,FEEDBACK_COLUMN_FAMILY,"comment")));
+            }
+        }
+    }
+
+    public void query7(String vendor) {
+        Filters.Filter filter = FILTERS.family().exactMatch(PRODUCT_COLUMN_FAMILY);
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        String startDatePreviousQuarter = "2022-01-01";
+        String endDatePreviousQuarter = "2022-03-31";
+        String startDateActualQuarter = "2022-04-01";
+        String endDateActualQuarter = "2022-06-30";
+        ArrayList<Row> negativeFeedbacks = new ArrayList<>();
+        String asin;
+        for(Row row : rows) {
+            if(this.getValueForQualifier(row,PRODUCT_COLUMN_FAMILY,"brand").equals(vendor)) {
+                asin = getValueForQualifier(row,PRODUCT_COLUMN_FAMILY,"asin");
+                if(this.getSellsForSpecificProductForSpecificPeriod(asin,startDatePreviousQuarter,endDatePreviousQuarter)
+                > this.getSellsForSpecificProductForSpecificPeriod(asin,startDateActualQuarter,endDateActualQuarter)) {
+                   negativeFeedbacks.addAll(this.getNegativeFeedbacksForSpecificProduct(asin));
+                }
+            }
+        }
+        if(negativeFeedbacks.size() > 0) {
+            System.out.println("Negative feedbacks for bad products");
+            negativeFeedbacks.forEach(feedback -> System.out.println(feedback));
+        }
+    }
+
     public ArrayList<Row> getPeopleWhoPostedOnProduct(String name, String fromDate, String toDate) {
         Filters.Filter filter = FILTERS.family().exactMatch(POST_COLUMN_FAMILY);
         ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
@@ -226,7 +277,7 @@ public class DataRequests {
         ArrayList<String> lookingForFriends = new ArrayList<>();
         ArrayList<String> newFriends = new ArrayList<>();
         lookingForFriends.add(id);
-        for(int i = 0; i < 3; i++) {
+        for(int i = 0; i < hop; i++) {
             ServerStream<Row> friends = this.bigTableClient.getRowsWithFilter(filter);
             for (Row row : friends) {
                 String friendId = getValueForQualifier(row, KNOWN_PERSON_COLUMN_FAMILY, "friendId");
@@ -267,6 +318,33 @@ public class DataRequests {
         }
         return results;
     }
+
+    public ArrayList<Row> getPositiveFeedbacksForSpecificProduct(String productAsin) {
+        ArrayList<Row> results = new ArrayList<>();
+        Filters.Filter filter = FILTERS.family().exactMatch(FEEDBACK_COLUMN_FAMILY);
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        for(Row row : rows){
+            if(getValueForQualifier(row,FEEDBACK_COLUMN_FAMILY,"asin").equals(productAsin) &&
+            isFeedBackPositive(row)) {
+                results.add(row);
+            }
+        }
+        return results;
+    }
+
+    public ArrayList<Row> getNegativeFeedbacksForSpecificProduct(String productAsin) {
+        ArrayList<Row> results = new ArrayList<>();
+        Filters.Filter filter = FILTERS.family().exactMatch(FEEDBACK_COLUMN_FAMILY);
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        for(Row row : rows){
+            if(getValueForQualifier(row,FEEDBACK_COLUMN_FAMILY,"asin").equals(productAsin) &&
+                    isFeedBackNegative(row)) {
+                results.add(row);
+            }
+        }
+        return results;
+    }
+
     public ArrayList<String> getNegativeFeedbacks(ArrayList<Row> feedBacks) {
         ArrayList<String> negativeFeedbacks = new ArrayList<>();
         String feedback;
@@ -277,6 +355,22 @@ public class DataRequests {
             }
         }
         return negativeFeedbacks;
+    }
+
+    public boolean isFeedBackPositive(Row feedBackRow) {
+        String feedback = getValueForQualifier(feedBackRow,FEEDBACK_COLUMN_FAMILY,"comment");
+        if(Integer.parseInt(feedback.substring(1,2)) == 5) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isFeedBackNegative(Row feedBackRow) {
+        String feedback = getValueForQualifier(feedBackRow,FEEDBACK_COLUMN_FAMILY,"comment");
+        if(Integer.parseInt(feedback.substring(1,2)) < 2) {
+            return true;
+        }
+        return false;
     }
 
     public String getNameforProduct(String asin) {
@@ -339,6 +433,22 @@ public class DataRequests {
         return productsRow;
     }
 
+    public ArrayList<Row> getProductsBoughtByOrder(String id) {
+        ArrayList<Row> productsRow = new ArrayList<>();
+        Filters.Filter filter = FILTERS.family().exactMatch(ORDER_ORDERLINE_COLUMN_FAMILY);
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        rows.forEach(row -> {
+            if(getValueForQualifier(row,ORDER_ORDERLINE_COLUMN_FAMILY,"orderId").equals(id)){
+                productsRow.add(row);
+            }
+        });
+        return productsRow;
+    }
+
+    public boolean isProductFromThisBrand(Row row, String brandName) {
+        return this.getValueForQualifier(row,ORDER_ORDERLINE_COLUMN_FAMILY,"brand").equals(brandName);
+    }
+
     public ArrayList<String> getProductsNameByOrder(String id) {
         ArrayList<String> productsRow = new ArrayList<>();
         Filters.Filter filter = FILTERS.family().exactMatch(ORDER_ORDERLINE_COLUMN_FAMILY);
@@ -361,6 +471,24 @@ public class DataRequests {
             }
         }
         return FilteredRows;
+    }
+
+    public Integer getSellsForSpecificProductForSpecificPeriod(String asin, String fromDate, String toDate) {
+        Integer sells = 0;
+        Filters.Filter filter = FILTERS.family().exactMatch(ORDER_COLUMN_FAMILY);
+        ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
+        for(Row row: rows) {
+            if(this.checkIfDateInRange(this.getValueForQualifier(row,ORDER_COLUMN_FAMILY,"orderDate"),fromDate,toDate)) {
+                ArrayList<Row> products = this.getProductsBoughtByOrder(this.getValueForQualifier(row, ORDER_COLUMN_FAMILY, "orderId"));
+                for (Row productRow : products) {
+                    System.out.println(productRow);
+                    if (getValueForQualifier(productRow, ORDER_ORDERLINE_COLUMN_FAMILY, "asin").equals(asin)) {
+                        sells++;
+                    }
+                }
+            }
+        }
+        return sells;
     }
 
     public String getMostUsedTagForCustomer(String id) {
