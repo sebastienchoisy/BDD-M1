@@ -4,7 +4,6 @@ import com.google.api.gax.rpc.ServerStream;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.models.Filters;
 import com.google.cloud.bigtable.data.v2.models.Row;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -38,6 +37,7 @@ public class DataRequests {
 //        requests.query1("Bill","Brown");
 //        requests.query2("Armasight Spark CORE Multi-Purpose Night Vision Monocular");
 //        requests.query3("B007SYGLZO","2000-06-06","2030-06-25");
+        requests.query4();
     }
 
     public void query1(String customerFirstName, String customerLastName) {
@@ -140,6 +140,22 @@ public class DataRequests {
         }
     }
 
+    public void query4() {
+        System.out.println("The top 2 persons who spent the highest amount of money in orders");
+        ArrayList<Row> topPeople = new ArrayList<>();
+        ArrayList<String> topPeopleId = this.getTop2PeopleAtSpending();
+        ArrayList<Row> mutualFriends = new ArrayList<>();
+        topPeopleId.forEach(peopleid -> {
+            topPeople.add(this.getCustomerRowWithId(peopleid));
+            mutualFriends.addAll(this.getCustomerFriends(peopleid,3));
+        });
+        ArrayList<Row> mutualFriendsWithoutDuplicates = new ArrayList<>(
+                new HashSet<>(mutualFriends));
+        System.out.println("Mutual Friends :");
+        mutualFriendsWithoutDuplicates.forEach(friend -> System.out.println(this.extractCustomerInfoFromRow(friend)));
+        topPeople.forEach(peopleRow -> System.out.println(this.extractCustomerInfoFromRow(peopleRow)));
+    }
+
     public ArrayList<Row> getPeopleWhoPostedOnProduct(String name, String fromDate, String toDate) {
         Filters.Filter filter = FILTERS.family().exactMatch(POST_COLUMN_FAMILY);
         ServerStream<Row> rows = this.bigTableClient.getRowsWithFilter(filter);
@@ -160,6 +176,83 @@ public class DataRequests {
             }
         });
         return people;
+    }
+
+    public String extractCustomerInfoFromRow(Row row) {
+        return this.getValueForQualifier(row,CUSTOMER_COLUMN_FAMILY,"id")+" "+
+                this.getValueForQualifier(row,CUSTOMER_COLUMN_FAMILY,"firstName")+" "+
+                this.getValueForQualifier(row,CUSTOMER_COLUMN_FAMILY,"lastName");
+    }
+
+    public ArrayList<String> getTop2PeopleAtSpending() {
+        HashMap<String,Double> spentAmounts = new HashMap<>();
+        String id;
+        Double amount;
+        Filters.Filter filter = FILTERS.family().exactMatch(CUSTOMER_COLUMN_FAMILY);
+        ServerStream<Row> customers = this.bigTableClient.getRowsWithFilter(filter);
+        ArrayList<Double> amounts = new ArrayList<>();
+        for(Row row : customers) {
+            id = getValueForQualifier(row, CUSTOMER_COLUMN_FAMILY, "id");
+            amount = this.getSpentAmountForSpecificCustomer(id);
+            spentAmounts.put(id, amount);
+            amounts.add(amount);
+        }
+        Collections.sort(amounts, Collections.reverseOrder());
+        ArrayList<String> topPeopleId = new ArrayList<>();
+        for (Map.Entry<String,Double> entry : spentAmounts.entrySet()) {
+            if (topPeopleId.size()< 2 && (entry.getValue().equals(amounts.get(0)) || entry.getValue().equals(amounts.get(1)))) {
+                topPeopleId.add(entry.getKey());
+            } else if(topPeopleId.size() >= 2) {
+                return topPeopleId;
+            }
+        }
+        return topPeopleId;
+    }
+
+    public Double getSpentAmountForSpecificCustomer(String customerId) {
+        Double amount = 0.0;
+        Filters.Filter filter = FILTERS.family().exactMatch(ORDER_COLUMN_FAMILY);
+        ServerStream<Row> orders = this.bigTableClient.getRowsWithFilter(filter);
+        for(Row row : orders) {
+            if(getValueForQualifier(row, ORDER_COLUMN_FAMILY, "personId").equals(customerId)) {
+                amount += Float.parseFloat(getValueForQualifier(row, ORDER_COLUMN_FAMILY, "totalPrice"));
+            }
+        }
+        return amount;
+    }
+
+    public ArrayList<Row> getCustomerFriends(String id, Integer hop) {
+        Filters.Filter filter = FILTERS.family().exactMatch(KNOWN_PERSON_COLUMN_FAMILY);
+        ArrayList<String> lookingForFriends = new ArrayList<>();
+        ArrayList<String> newFriends = new ArrayList<>();
+        lookingForFriends.add(id);
+        for(int i = 0; i < 3; i++) {
+            ServerStream<Row> friends = this.bigTableClient.getRowsWithFilter(filter);
+            for (Row row : friends) {
+                String friendId = getValueForQualifier(row, KNOWN_PERSON_COLUMN_FAMILY, "friendId");
+                if (lookingForFriends.contains(getValueForQualifier(row, KNOWN_PERSON_COLUMN_FAMILY, "personId"))
+                        && !lookingForFriends.contains(friendId)) {
+                    newFriends.add(friendId);
+                }
+            }
+            lookingForFriends.addAll(newFriends);
+        }
+        lookingForFriends.remove(id);
+        ArrayList<Row> friendsRow = new ArrayList<>();
+        lookingForFriends.forEach(friendId -> {
+            friendsRow.add(getCustomerRowWithId(friendId));});
+        return friendsRow;
+    }
+
+    public Row getCustomerRowWithId(String id) {
+        Filters.Filter filter = FILTERS.family().exactMatch(CUSTOMER_COLUMN_FAMILY);
+        ServerStream<Row> customers = this.bigTableClient.getRowsWithFilter(filter);
+        for(Row row : customers) {
+            if(getValueForQualifier(row,CUSTOMER_COLUMN_FAMILY,"id").equals(id)) {
+                return row;
+            }
+        }
+        return null;
     }
 
     public ArrayList<Row> getFeedbacksForSpecificCustomerAndSpecificProduct(String customerId, String productAsin) {
