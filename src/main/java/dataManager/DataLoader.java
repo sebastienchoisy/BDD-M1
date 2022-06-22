@@ -66,6 +66,7 @@ public class DataLoader {
         loader.writePostTagsToTable();
     }
 
+    // Ecriture des clients dans la base à partir d'une liste de persons récupérée du CSV
     public void writePersonsToTable() throws IOException {
         System.out.println("Début chargement de la data Person");
         ArrayList<Person> persons = this.csvReader.getPersonsDataListFromCsvFile();
@@ -82,6 +83,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des feedbacks dans la base à partir d'une liste de feedBacks récupérée du CSV
     public void writeFeedBacksToTable() throws IOException {
         System.out.println("Début chargement de la data Feedback");
         ArrayList<FeedBack> feedBacks = this.csvReader.getFeedBacksDataListFromCsvFile();
@@ -98,6 +100,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des produits dans la base à partir d'une liste de products récupérée du CSV
     public void writeProductsToTable() throws IOException {
         System.out.println("Début chargement de la data Product");
         ArrayList<Product> products = this.csvReader.getProductsFromCsvFile();
@@ -114,6 +117,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des liens entre clients dans la base à partir d'une liste de PersonLink récupérée du CSV
     public void writeKnownPersonToTable() throws IOException {
         System.out.println("Début chargement de la data KnownPerson");
         ArrayList<PersonLink> knownPersons = this.csvReader.getLinkByPersonFromCsvFile();
@@ -130,6 +134,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des tags clients dans la base à partir d'une liste de TagsByPerson récupérée du CSV
     public void writePersonTagsToTable() throws IOException {
         System.out.println("Début chargement de la data PersonTags");
         ArrayList<TagsByPerson> PersonTags = this.csvReader.getTagsByPersonFromCsvFile();
@@ -146,6 +151,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des tags posts dans la base à partir d'une liste de TagsByPost récupérée du CSV
     public void writePostTagsToTable() throws IOException {
         System.out.println("Début chargement de la data PostTags");
         ArrayList<TagsByPost> postTags = this.csvReader.getTagsByPostFromCsvFile();
@@ -162,6 +168,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des invoices dans la base à partir d'une liste de Invoice et Orderline récupérée du XML
     public void writeInvoicesToTable() throws  IOException {
         ArrayList<Invoice> invoices = this.xmlReader.getInvoicesFromXml();
         ArrayList<OrderLine> orderLines = this.xmlReader.getOrderLines();
@@ -189,6 +196,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des commandes dans la base à partir d'une liste d'Order récupérée du Json
     public void writeOrdersToTable() throws IOException {
         ArrayList<Order> orders = this.jsonFileReader.getOrdersFromJson();
         int productIndex = 0;
@@ -215,6 +223,7 @@ public class DataLoader {
         }
     }
 
+    // Ecriture des posts dans la base à partir d'une liste de Post récupérée du CSV
     public void writePostsToTable() throws IOException {
         ArrayList<Post> posts = this.csvReader.getPostsFromCsvFile();
         try {
@@ -231,6 +240,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un client
     public void addPersonDataRow(Person person, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -250,6 +260,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un feedback
     public void addFeedBackDataRow(FeedBack feedback, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -263,6 +274,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un invoice
     public void addInvoiceDataRow(Invoice invoice, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -277,6 +289,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un orderline d'invoice
     public void addOrderLineInvoiceDataRow(OrderLine orderLine, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -293,6 +306,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à une commande
     public void addOrderDataRow(Order order, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -307,6 +321,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un orderline de commande
     public void addOrderLineOrderDataRow(Product product, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -324,6 +339,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un produit
     public void addProductDataRow(Product product, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -340,6 +356,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un post
     public void addPostDataRow(Post post, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -359,6 +376,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un lien entre clients
     public void addKnownPersonDataRow(PersonLink knowPerson, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -372,6 +390,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un tag pour un client
     public void addPersonTagsDataRow(TagsByPerson personTags, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -384,6 +403,7 @@ public class DataLoader {
         }
     }
 
+    // Ajout d'une ligne relative à un tag pour un post
     public void addPostTagsDataRow(TagsByPost postTags, Integer rowkeyIndex) {
         try {
             RowMutation rowMutation =
@@ -396,6 +416,7 @@ public class DataLoader {
         }
     }
 
+    // Méthode pour éviter de stocker des valeurs null
     public String FormatNullString(String string) {
         if(string == null){
             return "";

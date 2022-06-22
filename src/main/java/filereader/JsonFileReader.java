@@ -19,6 +19,7 @@ public class JsonFileReader {
         reader.getOrdersFromJson();
     }
 
+    // Récupération des commandes depuis le fichier Json fonctionnel
     public ArrayList<Order> getOrdersFromJson() throws IOException {
         this.fixOrdersJson();
         this.file = new File("././data/Order/OrderFixed.json");
@@ -27,6 +28,7 @@ public class JsonFileReader {
         return ordersList;
     }
 
+    // fix du Json de base qui n'était pas valide
     private void fixOrdersJson() throws IOException {
         this.file = new File("././data/Order/Order.json");
         System.out.println("Traitement Json car mauvais format...");

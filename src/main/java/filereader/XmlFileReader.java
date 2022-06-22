@@ -20,6 +20,7 @@ public class XmlFileReader {
         this.orderLines = new ArrayList<>();
     }
 
+    // Récupération de la liste des invoices depuis le fichier XML
     public ArrayList<Invoice> getInvoicesFromXml() {
         ArrayList<Invoice> Invoices = new ArrayList<>();
         try {
@@ -39,6 +40,7 @@ public class XmlFileReader {
         return Invoices;
     }
 
+    // Récupération des orderlines depuis le xml
     private OrderLine getOrderlineFromXml(Node orderLine, String orderId) {
         Element elt = (Element) orderLine;
         return new OrderLine(elt.getElementsByTagName("productId").item(0).getTextContent(),
@@ -49,6 +51,7 @@ public class XmlFileReader {
                 orderId);
     }
 
+    // Récupération des invoices un à un depuis le fichier XML
     private Invoice getInvoiceFromXml(Node invoice) {
         Element elt = (Element) invoice;
         String orderId = elt.getElementsByTagName("OrderId").item(0).getTextContent();

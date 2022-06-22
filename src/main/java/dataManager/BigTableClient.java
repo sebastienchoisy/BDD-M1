@@ -1,5 +1,5 @@
 package dataManager;
-//https://console.cloud.google.com/bigtable/instances?authuser=3&project=projetbddm1
+
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.ServerStream;
 import com.google.cloud.bigtable.admin.v2.BigtableTableAdminClient;
@@ -26,6 +26,7 @@ public class BigTableClient {
     private final String tableId = "data";
 
     public BigTableClient() throws IOException {
+        // Initialisation des clients BigTable avec les différentes ID's pour les différentes opérations
         BigtableDataSettings settings =
                 BigtableDataSettings.newBuilder().setProjectId(this.projectId).setInstanceId(this.instanceId).build();
         this.dataClient = BigtableDataClient.create(settings);
@@ -37,6 +38,7 @@ public class BigTableClient {
         this.adminClient = BigtableTableAdminClient.create(adminSettings);
     }
 
+    // Création de la table si elle n'existe pas
     public void createTableIfDoesntExist() {
         if(!this.adminClient.exists(this.tableId)) {
             System.out.println("La table "+ this.tableId + " n'existe pas ! -> Création de la table");
@@ -49,6 +51,7 @@ public class BigTableClient {
         }
     }
 
+    // Renvoit true si la column family existe deja
     public boolean isColumnFamilyExisting(String columnFamilyName) {
         boolean doesExist = false;
         List<ColumnFamily> columnFamilies = this.adminClient.getTable(this.tableId).getColumnFamilies();
@@ -60,12 +63,14 @@ public class BigTableClient {
         return doesExist;
     }
 
+    // Ajout d'une column family
     public void addColumnFamily(String columnFamilyName) {
         ModifyColumnFamiliesRequest familiesRequest = ModifyColumnFamiliesRequest
                 .of(this.tableId).addFamily(columnFamilyName);
         this.adminClient.modifyFamilies(familiesRequest);
     }
 
+    // Suppression de la table
     public void deleteTable() {
         System.out.println("\nSuppression de la table "+this.tableId);
         try {
@@ -76,12 +81,14 @@ public class BigTableClient {
         }
     }
 
+    // Récuperation des différentes lignes selon le filtre donné en parametre
     public ServerStream getRowsWithFilter(Filters.Filter filter) {
             Query query = Query.create(this.tableId).filter(filter);
             ServerStream<Row> rows = this.dataClient.readRows(query);
             return rows;
     }
 
+    // Affichage d'une ligne
     public void printRow(Row row) {
         System.out.printf("Reading data for %s%n", row.getKey().toStringUtf8());
         String colFamily = "";
@@ -98,6 +105,7 @@ public class BigTableClient {
         System.out.println();
     }
 
+    // Update d'une cellule d'une ligne spécifique en donnant la column family, la clé de ligne, le qualifier et la nouvelle valuer
     public void updateDataRow(String columnFamilyName, String rowkey, String qualifier, String value) {
         try {
             RowMutation rowMutation =
@@ -108,6 +116,7 @@ public class BigTableClient {
         }
     }
 
+    // Suppresion d'une cellule specifique
     public void deleteSpecificCell(String rowkey, String ColumnFamilyName, String qualifier) {
         try {
             RowMutation rowMutation =
